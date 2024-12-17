@@ -1,0 +1,349 @@
+-- MySQL dump 10.13  Distrib 8.0.33, for Win64 (x86_64)
+--
+-- Host: localhost    Database: pickingparking
+-- ------------------------------------------------------
+-- Server version	8.0.33
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!50503 SET NAMES utf8mb4 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+--
+-- Table structure for table `car`
+--
+
+DROP TABLE IF EXISTS `car`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `car` (
+  `car_seq` int unsigned NOT NULL AUTO_INCREMENT,
+  `car_plate` varchar(20) NOT NULL,
+  `car_submit_image` varchar(1000) DEFAULT NULL,
+  `user_seq` int unsigned NOT NULL,
+  PRIMARY KEY (`car_seq`),
+  UNIQUE KEY `UKhiq3dacpvc3iqmfmdqs3fq663` (`car_plate`),
+  KEY `FKt73gu8n7jkt4gtdm13h2wn4p9` (`user_seq`),
+  CONSTRAINT `FKt73gu8n7jkt4gtdm13h2wn4p9` FOREIGN KEY (`user_seq`) REFERENCES `user` (`user_seq`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `car`
+--
+
+LOCK TABLES `car` WRITE;
+/*!40000 ALTER TABLE `car` DISABLE KEYS */;
+/*!40000 ALTER TABLE `car` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `charge`
+--
+
+DROP TABLE IF EXISTS `charge`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `charge` (
+  `charge_seq` int unsigned NOT NULL AUTO_INCREMENT,
+  `charge_price` int NOT NULL,
+  `charge_time` datetime(6) NOT NULL,
+  `point_seq` int unsigned NOT NULL,
+  `user_seq` int unsigned NOT NULL,
+  PRIMARY KEY (`charge_seq`),
+  KEY `FK6xjq9wfovq0px2yitvfjt8h1a` (`point_seq`),
+  KEY `FKf3edgafbbmohy360a3b704re4` (`user_seq`),
+  CONSTRAINT `FK6xjq9wfovq0px2yitvfjt8h1a` FOREIGN KEY (`point_seq`) REFERENCES `point` (`point_seq`),
+  CONSTRAINT `FKf3edgafbbmohy360a3b704re4` FOREIGN KEY (`user_seq`) REFERENCES `user` (`user_seq`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `charge`
+--
+
+LOCK TABLES `charge` WRITE;
+/*!40000 ALTER TABLE `charge` DISABLE KEYS */;
+/*!40000 ALTER TABLE `charge` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `immediate`
+--
+
+DROP TABLE IF EXISTS `immediate`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `immediate` (
+  `immediate_seq` int unsigned NOT NULL AUTO_INCREMENT,
+  `end_time` datetime(6) NOT NULL,
+  `start_time` datetime(6) NOT NULL,
+  `immediate_status` enum('FINISH','ONGOING','REFUND') DEFAULT NULL,
+  `payment_seq` int unsigned DEFAULT NULL,
+  `user_seq` int unsigned NOT NULL,
+  `zone_seq` int unsigned NOT NULL,
+  PRIMARY KEY (`immediate_seq`),
+  UNIQUE KEY `UKm21mki1p0xc0wobtk301dwhga` (`payment_seq`),
+  KEY `FKtgayetsgjt1idkefjr46c3kh4` (`user_seq`),
+  KEY `FKqwvj30i4am70epmnb7v0pocxc` (`zone_seq`),
+  CONSTRAINT `FKk04h4qobo6fju3eu2cfjvamgq` FOREIGN KEY (`payment_seq`) REFERENCES `payment` (`payment_seq`),
+  CONSTRAINT `FKqwvj30i4am70epmnb7v0pocxc` FOREIGN KEY (`zone_seq`) REFERENCES `parking_zone` (`zone_seq`),
+  CONSTRAINT `FKtgayetsgjt1idkefjr46c3kh4` FOREIGN KEY (`user_seq`) REFERENCES `user` (`user_seq`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `immediate`
+--
+
+LOCK TABLES `immediate` WRITE;
+/*!40000 ALTER TABLE `immediate` DISABLE KEYS */;
+/*!40000 ALTER TABLE `immediate` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `notification`
+--
+
+DROP TABLE IF EXISTS `notification`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `notification` (
+  `notification_seq` int unsigned NOT NULL AUTO_INCREMENT,
+  `content` varchar(10000) DEFAULT NULL,
+  `created_at` datetime(6) DEFAULT NULL,
+  `isread` bit(1) DEFAULT NULL,
+  `title` varchar(100) DEFAULT NULL,
+  `type` enum('app','push') NOT NULL,
+  `immediate_seq` int unsigned DEFAULT NULL,
+  `point_seq` int unsigned DEFAULT NULL,
+  `reservation_seq` int unsigned DEFAULT NULL,
+  `tow_seq` int unsigned DEFAULT NULL,
+  `user_seq` int unsigned NOT NULL,
+  `zone_seq` int unsigned DEFAULT NULL,
+  PRIMARY KEY (`notification_seq`),
+  KEY `FKcoswdv966uc9okbu8et6fpr0w` (`immediate_seq`),
+  KEY `FKpwqubg20i267hi4mufdb5t4l5` (`point_seq`),
+  KEY `FKt11fpx2x0ioq2a0pcsqosavkw` (`reservation_seq`),
+  KEY `FKkr72m9ofy158h7kng1sdd6y3x` (`tow_seq`),
+  KEY `FK66shf0xa1n4y7pm30m0rvg4ks` (`user_seq`),
+  KEY `FKs2u7tpv67qwsotsxiydompbok` (`zone_seq`),
+  CONSTRAINT `FK66shf0xa1n4y7pm30m0rvg4ks` FOREIGN KEY (`user_seq`) REFERENCES `user` (`user_seq`),
+  CONSTRAINT `FKcoswdv966uc9okbu8et6fpr0w` FOREIGN KEY (`immediate_seq`) REFERENCES `immediate` (`immediate_seq`),
+  CONSTRAINT `FKkr72m9ofy158h7kng1sdd6y3x` FOREIGN KEY (`tow_seq`) REFERENCES `tow` (`tow_seq`),
+  CONSTRAINT `FKpwqubg20i267hi4mufdb5t4l5` FOREIGN KEY (`point_seq`) REFERENCES `point` (`point_seq`),
+  CONSTRAINT `FKs2u7tpv67qwsotsxiydompbok` FOREIGN KEY (`zone_seq`) REFERENCES `parking_zone` (`zone_seq`),
+  CONSTRAINT `FKt11fpx2x0ioq2a0pcsqosavkw` FOREIGN KEY (`reservation_seq`) REFERENCES `reservation` (`reservation_seq`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `notification`
+--
+
+LOCK TABLES `notification` WRITE;
+/*!40000 ALTER TABLE `notification` DISABLE KEYS */;
+/*!40000 ALTER TABLE `notification` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `parking_zone`
+--
+
+DROP TABLE IF EXISTS `parking_zone`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `parking_zone` (
+  `zone_seq` int unsigned NOT NULL AUTO_INCREMENT,
+  `location_x` decimal(10,6) NOT NULL,
+  `location` varchar(100) NOT NULL,
+  `location_y` decimal(10,6) NOT NULL,
+  `price` int NOT NULL,
+  `prk_cmpr` varchar(20) NOT NULL,
+  `zone_status` enum('B','R','Y') DEFAULT NULL,
+  `user_seq` int unsigned DEFAULT NULL,
+  PRIMARY KEY (`zone_seq`),
+  UNIQUE KEY `UKbv2v4urly45b5ltt44ptgxocy` (`location`),
+  UNIQUE KEY `UKas41xebi3ag663s3f4hbh231f` (`prk_cmpr`),
+  KEY `FK78dndsbqemb0419ir7kpkv31t` (`user_seq`),
+  CONSTRAINT `FK78dndsbqemb0419ir7kpkv31t` FOREIGN KEY (`user_seq`) REFERENCES `user` (`user_seq`)
+) ENGINE=InnoDB AUTO_INCREMENT=49 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `parking_zone`
+--
+
+LOCK TABLES `parking_zone` WRITE;
+/*!40000 ALTER TABLE `parking_zone` DISABLE KEYS */;
+INSERT INTO `parking_zone` VALUES (1,37.493580,'서울특별시 강남구 남부순환로397길',127.061076,300,'11680-203-1외',NULL,NULL),(2,37.528172,'서울특별시 강남구 압구정로29길',127.028381,300,'11680-111-601외',NULL,NULL),(3,37.527082,'서울특별시 강남구 도산대로81길',127.045761,300,'11680-121-101외',NULL,NULL),(4,37.522391,'서울특별시 강남구 언주로 806',127.033814,300,'11680-112-101외',NULL,NULL),(5,37.519632,'서울특별시 강남구 도산대로34길',127.031023,300,'11680-143-101외',NULL,NULL),(6,37.524404,'서울특별시 강남구 압구정로 113',127.018446,300,'11680-102-101외',NULL,NULL),(7,37.515131,'서울특별시 강남구 언주로 652',127.035781,300,'11680-144-103외',NULL,NULL),(8,37.515868,'서울특별시 강남구 강남대로 606',127.020156,300,'11680-131-116외',NULL,NULL),(9,37.520707,'서울특별시 강남구 언주로 734',127.034565,300,'11680-142-112외',NULL,NULL),(10,37.506627,'서울특별시 강남구 테헤란로 504',127.057347,300,'11680-211-101외',NULL,NULL),(11,37.507130,'서울특별시 강남구 논현로 570',127.034278,300,'11680-171-104-1외',NULL,NULL),(12,37.525727,'서울특별시 강남구 논현로175길',127.027102,300,'11680-111-106외',NULL,NULL),(13,37.516856,'서울특별시 강남구 강남대로 616',127.019798,300,'11680-101-106외',NULL,NULL),(14,37.501155,'서울특별시 강남구 선릉로 406',127.050833,300,'11680-221-110외',NULL,NULL),(15,37.510097,'서울특별시 강남구 선릉로 578',127.044158,300,'11680-162-105외',NULL,NULL),(16,37.519995,'서울특별시 강남구 영동대로 648',127.057668,300,'11680-154-134외',NULL,NULL),(17,37.518595,'서울특별시 강남구 삼성로 654',127.050710,300,'11680-151-101외',NULL,NULL),(18,37.522860,'서울특별시 강남구 선릉로 762',127.039500,300,'11680-124-101외',NULL,NULL),(19,37.523969,'서울특별시 강남구 도산대로 502',127.047912,300,'11680-122-101-4외',NULL,NULL),(20,37.483834,'서울특별시 강남구 광평로3길',127.078108,300,'11680-281-101외',NULL,NULL),(21,37.492300,'서울특별시 강남구 일원로 21',127.081133,300,'11680-291-111외',NULL,NULL),(22,37.493630,'서울특별시 강남구 양재대로55길',127.089708,300,'11680-292-1외',NULL,NULL),(23,37.492152,'서울특별시 강남구 도곡로 204',127.041422,300,'11680-232-101-5외',NULL,NULL),(24,37.486981,'서울특별시 강남구 광평로60길',127.106951,300,'11680-311-143외',NULL,NULL),(25,37.485279,'서울특별시 강남구 남부순환로 2704',127.041836,300,'11680-241-102외',NULL,NULL),(26,37.483870,'서울특별시 강남구 선릉로10길',127.061693,300,'11680-271-101외',NULL,NULL),(27,37.491713,'서울특별시 강남구 도곡로 184',127.039749,300,'11680-231-136외',NULL,NULL),(28,37.495765,'서울특별시 강남구 논현로 340',127.039633,300,'11680-181-101외',NULL,NULL),(29,37.500410,'서울특별시 강남구 테헤란로 202',127.037983,300,'11680-182-101외',NULL,NULL),(30,37.492993,'서울특별시 강남구 강남대로 334',127.030472,300,'11680-176-101외',NULL,NULL),(31,37.504534,'서울특별시 강남구 봉은사로 108',127.025592,300,'11680-174-120외',NULL,NULL),(32,37.494514,'서울특별시 강남구 역삼로 146',127.035350,300,'11680-172-101-3외',NULL,NULL),(33,37.508690,'서울특별시 강남구 봉은사로 302',127.039403,300,'11680-173-104외',NULL,NULL),(34,37.473457,'서울특별시 강남구 자곡로7길',127.100136,300,'11680-322-101외',NULL,NULL),(35,37.483834,'서울특별시 강남구 헌릉로570길',127.078108,300,'11680-321-101외',NULL,NULL),(36,37.500024,'서울특별시 강남구 테헤란로 152',127.036509,300,'11680-175-118외',NULL,NULL),(37,37.502429,'서울특별시 강남구 테헤란로 302',127.043475,300,'11680-183-201외',NULL,NULL),(38,37.493163,'서울특별시 강남구 개포로109길',127.076244,300,'11680-301-101외',NULL,NULL),(39,37.527448,'서울특별시 강남구 선릉로 846',127.040826,300,'11680-123-108외',NULL,NULL),(40,37.516993,'서울특별시 강남구 학동로 402',127.041789,300,'11680-161-141-2외',NULL,NULL),(41,37.512883,'서울특별시 강남구 봉은사로 502',127.053852,300,'11680-152-109외',NULL,NULL),(42,37.513640,'서울특별시 강남구 영동대로 520',127.061137,300,'11680-153-101외',NULL,NULL),(43,37.492182,'서울특별시 강남구 남부순환로 2909',127.057411,300,'11680-201-102외',NULL,NULL),(44,37.502322,'서울특별시 강남구 영동대로 312',127.067439,300,'11680-213-101외',NULL,NULL),(45,37.500506,'서울특별시 강남구 선릉로 344',127.051191,300,'11680-222-111외',NULL,NULL),(46,37.511035,'서울특별시 강남구 강남대로 548',127.021887,300,'11680-132-101외',NULL,NULL),(47,37.503043,'서울특별시 강남구 삼성로 352',127.059072,300,'11680-212-103외',NULL,NULL),(48,37.513782,'서울특별시 강남구 학동로 204',127.031231,300,'11680-141-101-1외',NULL,NULL);
+/*!40000 ALTER TABLE `parking_zone` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `payment`
+--
+
+DROP TABLE IF EXISTS `payment`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `payment` (
+  `payment_seq` int unsigned NOT NULL AUTO_INCREMENT,
+  `total_price` int NOT NULL,
+  `payment_source` enum('IMMEDIATE','RESERVATION') DEFAULT NULL,
+  `payment_time` datetime(6) NOT NULL,
+  `point_seq` int unsigned NOT NULL,
+  `zone_seq` int unsigned NOT NULL,
+  PRIMARY KEY (`payment_seq`),
+  KEY `FKahg2089qj9sinbk3ps23x84pv` (`point_seq`),
+  KEY `FK95eukywe1ig2a7yad9223c1jf` (`zone_seq`),
+  CONSTRAINT `FK95eukywe1ig2a7yad9223c1jf` FOREIGN KEY (`zone_seq`) REFERENCES `parking_zone` (`zone_seq`),
+  CONSTRAINT `FKahg2089qj9sinbk3ps23x84pv` FOREIGN KEY (`point_seq`) REFERENCES `point` (`point_seq`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `payment`
+--
+
+LOCK TABLES `payment` WRITE;
+/*!40000 ALTER TABLE `payment` DISABLE KEYS */;
+/*!40000 ALTER TABLE `payment` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `point`
+--
+
+DROP TABLE IF EXISTS `point`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `point` (
+  `point_seq` int unsigned NOT NULL AUTO_INCREMENT,
+  `point_price` int NOT NULL,
+  `point_source` enum('CHARGE','PAYMENT') DEFAULT NULL,
+  `user_seq` int unsigned NOT NULL,
+  PRIMARY KEY (`point_seq`),
+  KEY `FKg8ar84a90x6dekiyoms1wy1cl` (`user_seq`),
+  CONSTRAINT `FKg8ar84a90x6dekiyoms1wy1cl` FOREIGN KEY (`user_seq`) REFERENCES `user` (`user_seq`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `point`
+--
+
+LOCK TABLES `point` WRITE;
+/*!40000 ALTER TABLE `point` DISABLE KEYS */;
+/*!40000 ALTER TABLE `point` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `reservation`
+--
+
+DROP TABLE IF EXISTS `reservation`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `reservation` (
+  `reservation_seq` int unsigned NOT NULL AUTO_INCREMENT,
+  `end_time` datetime(6) NOT NULL,
+  `start_time` datetime(6) NOT NULL,
+  `reservation_status` enum('FINISH','ONGOING','REFUND','RESERVATION') DEFAULT NULL,
+  `payment_seq` int unsigned NOT NULL,
+  `user_seq` int unsigned NOT NULL,
+  `zone_seq` int unsigned NOT NULL,
+  PRIMARY KEY (`reservation_seq`),
+  UNIQUE KEY `UKagnmsnirgp09k2yr2qp3e0905` (`payment_seq`),
+  KEY `FKfm417muc4fl0oqcsr8tdcnh1y` (`user_seq`),
+  KEY `FKjb2ja3m8tifj59icmj7obhscc` (`zone_seq`),
+  CONSTRAINT `FKfm417muc4fl0oqcsr8tdcnh1y` FOREIGN KEY (`user_seq`) REFERENCES `user` (`user_seq`),
+  CONSTRAINT `FKgvp9m68dv462vr8vs21fmystc` FOREIGN KEY (`payment_seq`) REFERENCES `payment` (`payment_seq`),
+  CONSTRAINT `FKjb2ja3m8tifj59icmj7obhscc` FOREIGN KEY (`zone_seq`) REFERENCES `parking_zone` (`zone_seq`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `reservation`
+--
+
+LOCK TABLES `reservation` WRITE;
+/*!40000 ALTER TABLE `reservation` DISABLE KEYS */;
+/*!40000 ALTER TABLE `reservation` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `tow`
+--
+
+DROP TABLE IF EXISTS `tow`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `tow` (
+  `tow_seq` int unsigned NOT NULL AUTO_INCREMENT,
+  `car_id` varchar(20) NOT NULL,
+  `isreport` bit(1) NOT NULL,
+  `report_time` datetime(6) DEFAULT NULL,
+  `start_time` datetime(6) NOT NULL,
+  `zone_seq` int unsigned NOT NULL,
+  PRIMARY KEY (`tow_seq`),
+  KEY `FK8iquyc0duv5htpx8jkigvt00k` (`zone_seq`),
+  CONSTRAINT `FK8iquyc0duv5htpx8jkigvt00k` FOREIGN KEY (`zone_seq`) REFERENCES `parking_zone` (`zone_seq`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `tow`
+--
+
+LOCK TABLES `tow` WRITE;
+/*!40000 ALTER TABLE `tow` DISABLE KEYS */;
+/*!40000 ALTER TABLE `tow` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `user`
+--
+
+DROP TABLE IF EXISTS `user`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `user` (
+  `user_seq` int unsigned NOT NULL AUTO_INCREMENT,
+  `created_at` datetime(6) DEFAULT NULL,
+  `user_pw` varchar(255) DEFAULT NULL,
+  `user_phone` varchar(20) NOT NULL,
+  `point` int NOT NULL,
+  `unsubcribed_at` datetime(6) DEFAULT NULL,
+  `user_id` varchar(20) NOT NULL,
+  PRIMARY KEY (`user_seq`),
+  UNIQUE KEY `UKa3imlf41l37utmxiquukk8ajc` (`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `user`
+--
+
+LOCK TABLES `user` WRITE;
+/*!40000 ALTER TABLE `user` DISABLE KEYS */;
+INSERT INTO `user` VALUES (11,'2024-11-08 16:21:48.118229','$2a$10$M28s0FaQ0.WL3gtbl0EFQeq1i6twEFvOOipJQWKdlMmXXakzDsMpa','1111',100,NULL,'qw');
+/*!40000 ALTER TABLE `user` ENABLE KEYS */;
+UNLOCK TABLES;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed on 2024-11-19 11:25:18

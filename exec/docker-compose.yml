@@ -1,0 +1,96 @@
+version: '3'
+
+services:
+  nginx:
+    container_name: nginx
+    image: nginx:latest
+    restart: on-failure
+    volumes:
+      - /home/ubuntu/conf/nginx.conf:/etc/nginx/nginx.conf
+      - /home/ubuntu/data/certbot/conf:/etc/letsencrypt
+      - /home/ubuntu/data/certbot/www:/var/www/certbot
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - frontend
+      - backend
+    command: "/bin/sh -c 'nginx -g \"daemon off;\"'"
+
+  certbot:
+    container_name: certbot
+    image: certbot/certbot
+    restart: unless-stopped
+    volumes:
+      - /home/ubuntu/data/certbot/conf:/etc/letsencrypt
+      - /home/ubuntu/data/certbot/www:/var/www/certbot
+    depends_on:
+      - nginx
+    entrypoint: "/bin/sh -c 'while :; do sleep 6h & wait $$!; certbot renew; done'"
+
+  frontend:
+    container_name: flutter
+    image: geunwook/flutter2:latest
+    ports:
+      - "58292:58292"
+    networks:
+      - frontend
+      - ssl
+
+  backend:
+    container_name: backend
+    image: geunwook/backend4:latest
+    ports:
+      - "8080:8080"
+    volumes:
+      - /usr/bin/ffmpeg:/usr/bin/ffmpeg  
+      - /home/ubuntu/upload/temp:/home/ubuntu/upload/temp
+      - ./.env:/.env
+      - ./backend/src/main/resources/certs:/app/certs
+    networks:
+      - backend
+      - ssl
+    env_file:
+      - .env
+    environment:
+      SPRING_APPLICATION_NAME: PickingParking
+      SERVER_ADDRESS: 0.0.0.0
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/pickingparking?useSSL=false&useUnicode=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: ssafy
+      SPRING_DATASOURCE_PASSWORD: ilovessafy
+      SPRING_JPA_SHOW_SQL: "true"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: "true"
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQLDialect
+      AWS_IOT_ENDPOINT: ${AWS_IOT_ENDPOINT}
+      AWS_CERT_PATH: /app/certs/AmazonRootCA1.pem
+      AWS_KEY_PATH: /app/certs/private.key
+      AWS_CLIENT_ID: ${AWS_CLIENT_ID}
+    depends_on:
+      - mysql
+
+
+  mysql:
+    container_name: mysql
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: ilovessafy
+      MYSQL_DATABASE: pickingparking
+      MYSQL_USER: ssafy
+      MYSQL_PASSWORD: ilovessafy
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - backend
+      - ssl
+
+networks: 
+  ssl:
+  backend:
+  frontend:
+
+volumes:
+  mysql-data:

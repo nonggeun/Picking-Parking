@@ -1,0 +1,144 @@
+pipeline {
+    agent any
+
+    tools {
+        // Global Tool Configuration에서 설정한 jdk21 사용
+        jdk ("openjdk")  // jdk21 설정
+    }
+
+    environment {
+        SSH_CREDENTIALS_ID = "ssh"
+        REMOTE_SERVER = "k11a102.p.ssafy.io"
+        DOCKER_COMPOSE_FILE = 'docker-compose.yml'
+        GIT_REPO_URL = 'https://lab.ssafy.com/s11-final/S11P31A102'
+        CREDENTIALS_ID = 'jenkins'
+        DOCKER_HUB_USERNAME = 'geunwook'
+        DOCKER_HUB_PASSWORD = 'az5483az!!'
+        JAVA_HOME = '/opt/java/openjdk'
+        DB_USERNAME = 'ssafy'
+        DB_PASSWORD = 'ilovessafy'
+        CERT_PATH = 'src/main/resources/certs/AmazonRootCA1.pem' // 인증서를 저장할 로컬 경로
+    }
+
+    stages {
+        stage('Prepare .env File') {
+            steps {
+                script {
+                    // .env 파일에 기록할 내용 정의
+                    def envContent = """
+                    AWS_IOT_ENDPOINT=a33gbanlr1i26p-ats.iot.ap-northeast-2.amazonaws.com
+                    AWS_CLIENT_ID=Backend
+                    AWS_CERT_PATH=src/main/resources/certs/certificate.pem.crt
+                    AWS_KEY_PATH=src/main/resources/certs/private.pem.key
+                    AWS_ROOT_CA_PATH=src/main/resources/certs/AmazonRootCA1.pem
+                    """
+
+                    // .env 파일을 생성하여 저장
+                    writeFile(file: '.env', text: envContent)
+                }
+            }
+        }
+        stage('Print Branch Info') {
+            steps {
+                script {
+                    echo "Current GIT_BRANCH: ${env.GIT_BRANCH}"
+                    def branch = sh(script: "git rev-parse --abbrev-ref HEAD", returnStdout: true).trim()
+                    echo "Current branch: ${branch}"
+                    echo "REMOTE_SERVER: ${env.REMOTE_SERVER}"
+                }
+            }
+        }
+
+        stage('Checkout') {
+            steps {
+                script {
+                    git branch: 'infra-test', credentialsId: CREDENTIALS_ID, url: GIT_REPO_URL
+                }
+            }
+        }
+
+        stage('Prepare Certificate') {
+            steps {
+                script {
+                    // 인증서를 Credentials에서 불러와 로컬에 저장
+                    withCredentials([string(credentialsId: 'amazon-root-ca1', variable: 'CERT_CONTENT')]) {
+                        sh '''
+                        mkdir -p src/main/resources/certs
+                        echo "$CERT_CONTENT" > ${CERT_PATH}
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('Build and Push Images') {
+            steps {
+                script {
+                    // Docker Hub 로그인
+                    sh 'docker login -u ${DOCKER_HUB_USERNAME} -p ${DOCKER_HUB_PASSWORD}'
+
+                    dir('frontend') {
+                        // Flutter 이미지 빌드 및 푸시
+                        sh 'docker build -t geunwook/flutter2:latest .'
+                        sh 'docker push geunwook/flutter2:latest'
+                    }
+
+                    dir('backend') {
+                        // Backend 빌드 및 푸시
+                        sh './gradlew build -x test'
+                        sh """
+                        docker build \
+                        --build-arg CERT_FILE=${CERT_PATH} \
+                        -t geunwook/backend4:latest . 
+                        """
+                        sh 'docker push geunwook/backend4:latest'
+                    }
+                }
+            }
+        }
+
+        stage('Pull Docker Images') {
+            steps {
+                script {
+                    // Docker Hub에서 Flutter 및 Backend 이미지 가져오기
+                    sh 'docker pull geunwook/flutter2:latest'
+                    sh 'docker pull geunwook/backend4:latest'
+                }
+            }
+        }
+
+        stage('Deploy to Remote Server') {
+            steps {
+                script {
+                    sshagent([SSH_CREDENTIALS_ID]) {
+                        sh '''
+                        # 원격 서버에서 Docker 이미지 pull
+                        ssh -o StrictHostKeyChecking=no ubuntu@${REMOTE_SERVER} << EOF_1
+                            docker login -u ${DOCKER_HUB_USERNAME} -p ${DOCKER_HUB_PASSWORD}
+                            docker pull geunwook/flutter2:latest
+                            docker pull geunwook/backend4:latest
+EOF_1
+
+                        # Docker Compose 파일 전송
+                        scp -o StrictHostKeyChecking=no ${DOCKER_COMPOSE_FILE} ubuntu@${REMOTE_SERVER}:/home/ubuntu/S11P31A102
+                        # .env 파일 전송
+                        scp -o StrictHostKeyChecking=no ./.env ubuntu@${REMOTE_SERVER}:/home/ubuntu/S11P31A102
+                        # 원격 서버에서 Docker Compose 실행
+                        ssh -o StrictHostKeyChecking=no ubuntu@${REMOTE_SERVER} << EOF_2
+                            cd /home/ubuntu/S11P31A102
+                            docker-compose -f ${DOCKER_COMPOSE_FILE} down
+                            docker-compose -f ${DOCKER_COMPOSE_FILE} up -d --build
+EOF_2
+                        '''
+                    }
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            cleanWs()
+        }
+    }
+}
